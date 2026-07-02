@@ -23,3 +23,14 @@ This is a live tracker of every physical piece of clothing sitting on a shelf in
 This is the largest and messiest table. It records every single mouse click or screen tap a user makes on the website or mobile app.
 We use this for behavioral analysis, mapping the customer journey, and spotting unusual activities.
 
+## Results
+We identify the five product categories that have generated the most sales for the company.
+
+<img width="1011" height="293" alt="Screenshot 2026-07-02 at 2 18 27 PM" src="https://github.com/user-attachments/assets/173cea0b-823b-4a87-9018-674cdf2ce405" />
+
+Average order value (AOV) for each distinct country in the system
+<img width="825" height="487" alt="Screenshot 2026-07-02 at 3 10 07 PM" src="https://github.com/user-attachments/assets/f611691c-ef47-4285-8011-c6ee40e9fcc9" />
+
+Top 10 highest-spending customers based on their lifetime purchase history
+<img width="785" height="375" alt="Screenshot 2026-07-02 at 3 11 39 PM" src="https://github.com/user-attachments/assets/8c8f7321-baa0-4c94-99e6-af02bbf78df2" />
+
