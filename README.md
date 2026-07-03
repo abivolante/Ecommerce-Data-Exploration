@@ -12,7 +12,7 @@ Customer Behaviour/Retention and Risk/Anomalies sections in development.
 - **users**
 One row for every single person who has ever registered an account. This is where we'll get all your demographic data to find out who your customers are.
 - **orders** (The Basket Summaries)
-One row for every distinct checkout basket submitted by a user. This tracks high-level business volume and order success rates.
+One row for every distinct checkout basket submitted by a user. This tracks order success rates.
 - **order_items** 
 The is the most important table for revenue. If an order has 3 items in the basket, this table will show 3 individual rows for that single order_id.
 We use this table to calculate financial metrics like total revenue, average order value, and product profit margins.
@@ -20,19 +20,19 @@ We use this table to calculate financial metrics like total revenue, average ord
 Thus contains a list of every single item of clothing available for sale on the website. We use this to order_items to see which brands or clothing categories are making the most money.
 - **distribution_centers** 
 This is a small reference table listing the physical warehouses where inventory is stored.
-This is normally used by supply chain analysts to calculate shipping distances. We will not use this table for this project.
+This is normally used by supply chain analysts to calculate shipping distances. I didn't use this table for this project.
 - **inventory_items** (The Warehouse Stock)
 This is a live tracker of every physical piece of clothing sitting on a shelf in a warehouse. This tracks stock levels to ensure the website doesn't sell items that are out of stock.
 - **events** (The Website Clickstream Logs)
 This is the largest and messiest table. It records every single mouse click or screen tap a user makes on the website or mobile app.
-We use this for behavioral analysis, mapping the customer journey, and spotting unusual activities.
+I used this for behavioral analysis, mapping the customer journey, and spotting unusual activities.
 
 ## Sales and Business Performance Results
 I first identified the five product categories that have generated the most sales for the company. I joined order_items to products on product_id to bring in category labels, then filtered to status = 'Complete' so cancelled/returned items don't inflate sales figures. Aggregated both unit count and gross revenue per category, ranked by revenue, and kept the top 5. Note that "Total sales volume" could mean units sold or revenue. I used revenue as the primary sort since it's usually the more relevant metric for businesses, but I kept total_units_sold in the output so both angles are visible.
 
 <img width="1011" height="293" alt="Screenshot 2026-07-02 at 2 18 27 PM" src="https://github.com/user-attachments/assets/173cea0b-823b-4a87-9018-674cdf2ce405" />
 
-I then calculated the Average Order Valie (AOV) for each distinct country in the system. Since country is readily available in the data, I thought that calculating this metric per country would allow us to easily localise business strategies. Here, AOV is defined as total revenue divided by distinct order count, not row count. This is important since order_items has one row per item, not per order. I joined order_items to users on user_id to get country, excluded Cancelled and Returned statuses (unlike the first query, I used a broader exclusion here rather than only keeping Complete, since Processing/Shipped orders still represent real committed revenue). Here, I noticed that countries with very few orders can produce a misleadingly high or low AOV (one large order can skew the whole average). For example, Spain has the highest AOV out of any country but only contain 3 orders so I included the HAVING COUNT(DISTINCT order_items.order_id) >= 50 to filter out countries with very little orders.
+I then calculated the Average Order Value (AOV) for each distinct country in the system. Since country is readily available in the data, I thought that calculating this metric per country would allow us to easily localise business strategies. Here, AOV is defined as total revenue divided by distinct order count, not row count. This is important since order_items has one row per item, not per order. I joined order_items to users on user_id to get country, excluded Cancelled and Returned statuses (unlike the first query, I used a broader exclusion here rather than only keeping Complete, since Processing/Shipped orders still represent real committed revenue). Here, I noticed that countries with very few orders can produce a misleadingly high or low AOV (one large order can skew the whole average). For example, Spain has the highest AOV out of any country but only contain 3 orders so I included the HAVING COUNT(DISTINCT order_items.order_id) >= 50 to filter out countries with very little orders.
 
 <img width="740" height="425" alt="aov" src="https://github.com/user-attachments/assets/f6602a08-a223-4244-8b72-38648d84adab" />
 
