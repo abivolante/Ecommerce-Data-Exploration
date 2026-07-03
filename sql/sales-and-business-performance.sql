@@ -58,6 +58,6 @@ FROM table1
 )
 
 SELECT month, year, 
-100*(revenue-past_revenue)/(past_revenue) AS growth_rate
+CONCAT(ROUND(100*(revenue-past_revenue)/(past_revenue), 2), "%") AS growth_rate
 FROM table2
-ORDER BY year, month
+ORDER BY year DESC, month DESC
