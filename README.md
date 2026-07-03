@@ -1,5 +1,6 @@
 # Ecommerce Dataset Exploration
-This project is a data exploration of **The Look Ecommerce** public dataset on Google BigQuery, built as a learning exercise to master SQL. I looked up common interesting questions that a business might find interesting across the three main common areas:
+
+This project is a data exploration of **The Look Ecommerce** public dataset on Google BigQuery, built as a learning exercise to master SQL. I looked at questions a business might find useful across three areas:
 
 - Sales and Business Performance
 - Customer Behaviour and Retention
@@ -7,8 +8,12 @@ This project is a data exploration of **The Look Ecommerce** public dataset on G
 
 **Status: In Progress** — Sales & Business Performance section complete. 
 Customer Behaviour/Retention and Risk/Anomalies sections in development.
+## Dataset
+This project uses **thelook_ecommerce** data available on Google BigQuery.
 
-## What is in the dataset?
+**Source:** https://console.cloud.google.com/marketplace/product/bigquery-public-data/thelook-ecommerce
+
+This Dataset contain 6 tables:
 - **users**
 One row for every single person who has ever registered an account. This is where we'll get all your demographic data to find out who your customers are.
 - **orders** (The Basket Summaries)
