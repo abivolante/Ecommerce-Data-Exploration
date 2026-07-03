@@ -5,6 +5,9 @@ This project is a data exploration of **The Look Ecommerce** public dataset on G
 - Customer Behaviour and Retention
 - Risk and Anomalies
 
+**Status: In Progress** — Sales & Business Performance section complete. 
+Customer Behaviour/Retention and Risk/Anomalies sections in development.
+
 ## What is in the dataset?
 - **users**
 One row for every single person who has ever registered an account. This is where we'll get all your demographic data to find out who your customers are.
@@ -24,7 +27,7 @@ This is a live tracker of every physical piece of clothing sitting on a shelf in
 This is the largest and messiest table. It records every single mouse click or screen tap a user makes on the website or mobile app.
 We use this for behavioral analysis, mapping the customer journey, and spotting unusual activities.
 
-## Results
+## Sales and Business Performance Results
 I first identified the five product categories that have generated the most sales for the company. I joined order_items to products on product_id to bring in category labels, then filtered to status = 'Complete' so cancelled/returned items don't inflate sales figures. Aggregated both unit count and gross revenue per category, ranked by revenue, and kept the top 5. Note that "Total sales volume" could mean units sold or revenue. I used revenue as the primary sort since it's usually the more relevant metric for businesses, but I kept total_units_sold in the output so both angles are visible.
 
 <img width="1011" height="293" alt="Screenshot 2026-07-02 at 2 18 27 PM" src="https://github.com/user-attachments/assets/173cea0b-823b-4a87-9018-674cdf2ce405" />
@@ -42,7 +45,18 @@ For this next query, I looked at month-over-month growth rate of completed sales
 
 <img width="506" height="430" alt="month-over-month" src="https://github.com/user-attachments/assets/264b7a60-c473-4577-9f38-460cb1228716" />
 
-### 🛠️ Technical Highlight:  Getting Chronological Ordering Right in LAG()
+## Customer Behaviour & Retention Results
+*Coming soon*
+
+## Risk & Anomalies Results
+*Coming soon*
+
+## Key SQL Techniques Used:
+
+* **CTEs (Common Table Expressions**): Separated raw revenue aggregation from the window function logic in a second step, keeping the script readable and easy to debug independently.
+* **Window Functions (LAG)**: Compared each month's revenue against the true immediately-preceding calendar month (ordered by year, month to avoid cross-year misalignment — see Technical Highlight below) to calculate period-over-period growth.
+
+## Technical Highlights:  Getting Chronological Ordering Right in LAG()
 
 The problem: Monthly revenue was extracted as two separate integer fields — EXTRACT(MONTH ...) and EXTRACT(YEAR ...). I initially sorted by month alone (since that's the value I ultimately care about comparing). But month only ranges 1–12 and repeats every year, so ordering by month alone would scramble the actual timeline: December 2023 could get placed next to December 2024 instead of next to January 2024, and LAG() would pull revenue from the wrong prior period entirely.
 The fix: Window the LAG() function using ORDER BY year, month, treating year as the primary sort key and month as secondary. This guarantees the sequence is truly chronological (Jan 2023 → Feb 2023 → ... → Dec 2023 → Jan 2024 → ...), so LAG(revenue, 1) always pulls the immediately preceding calendar month's revenue, even across a year boundary.
@@ -51,9 +65,5 @@ The fix: Window the LAG() function using ORDER BY year, month, treating year as 
 LAG(revenue, 1) OVER (ORDER BY year, month) AS past_revenue
 ```
 
-**Key SQL Techniques Used:**
-
-* **CTEs (Common Table Expressions**): Separated raw revenue aggregation from the window function logic in a second step, keeping the script readable and easy to debug independently.
-* **Window Functions (LAG)**: Compared each month's revenue against the true immediately-preceding calendar month (ordered by year, month to avoid cross-year misalignment — see Technical Highlight below) to calculate period-over-period growth.
 
 
