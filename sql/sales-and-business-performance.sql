@@ -27,6 +27,7 @@ SELECT users.country,
  ON (order_items.user_id=users.id)
  WHERE order_items.status NOT IN ('Cancelled', 'Returned')
  GROUP BY users.country
+ HAVING COUNT(DISTINCT order_items.order_id) >= 50
  ORDER BY aov DESC
 
 
