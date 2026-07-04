@@ -93,13 +93,13 @@ LAG(revenue, 1) OVER (ORDER BY year, month) AS past_revenue
 ### 2. Matching Events to Orders with No Direct Common Link
 
 
-**The problem:** Purchase events and order creation timestamps are a few seconds to minutes apart, and there's no direct foreign key between `events` and `orders`. A simple join on `user_id` alone would multiply every purchase event by every order that user ever placed — producing duplicate, meaningless rows.
+**The problem:** Purchase events and order creation timestamps are a few seconds to minutes apart, and there's no common variable that could link the specific rows for `events` and `orders`. A simple join on `user_id` alone would multiply every purchase event by every order that user ever placed, producing meaningless rows.
 
-**The fix:** I used `ROW_NUMBER()` partitioned by `user_id`, `created_at`, and `traffic_source` from the events side, ordered by the absolute time difference (`ABS(TIMESTAMP_DIFF(...))`) between the event and each candidate order. This creates a "nearest-match" ranking per purchase event, and keeping only `rank = 1` isolates the single closest order to each event — eliminating the duplicate rows a naive join would produce.
+**The fix:** I used `ROW_NUMBER()` partitioned by `user_id`, `created_at`, and `traffic_source` from the events side, ordered by the absolute time difference (`ABS(TIMESTAMP_DIFF(...))`) between the event and each candidate order. This creates a "nearest-match" ranking per purchase event, and keeping only `rank = 1` isolates the single closest order to each event, thus eliminating the duplicate rows a naive join would produce.
 
-Just as important: I filtered to `status = 'Complete'` *inside* the CTE, before ranking. Filtering after ranking would risk letting a closer-but-cancelled order win the match over a slightly later completed one — which would silently misattribute cancelled traffic as a successful conversion. Filtering first ensures only genuinely completed orders are ever eligible to be matched.
+Just as important: I filtered to `status = 'Complete'` *inside* the CTE, before ranking. Filtering after ranking would risk letting a closer but cancelled order win the match over a slightly later completed one, which would silently misattribute cancelled traffic as a successful conversion. Filtering first ensures only completed orders are ever eligible to be matched.
 
-**Why this matters:** For marketing attribution, this is the difference between "this channel drives traffic" and "this channel drives *sales*." Aggregating the cleaned, correctly-matched data by traffic source shows which channels aren't just sending visitors, but actually converting them into completed purchases.
+For marketing attribution, this is the difference between "this channel drives traffic" and "this channel drives *sales*." Aggregating the cleaned, correctly-matched data by traffic source shows which channels aren't just sending visitors, but actually converting them into completed purchases.
 
 
 
