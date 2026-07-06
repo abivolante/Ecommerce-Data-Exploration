@@ -72,7 +72,18 @@ Looking at the data recorded about customers and their behaviour, I wanted to un
 
 
 ## Risk & Anomalies Results
-*Coming soon*
+In this section, I wanted to look for unusual activity that could signal fraud or risk to the business.
+
+**IP addresses with the highest volume of cancelled/returned orders:** 
+I first looked for IP address tied to an unusually high number of cancelled or returned orders, which could indicate abuse of the return/cancellation process rather than normal customer behaviour.
+My first attempt joined `events` to `orders` on `user_id` alone, aggregated by IP address, and counted distinct cancelled/returned orders per IP. Then, when I looked at an instance of a specific user, I realised the code overcounted the number of cancelled/returned orders for a specific IP. I realised you'd need to use the same technique as when matching events to orders with no direct common link. (See 3. Technical Highlights for further explanation)
+
+<img width="592" height="299" alt="ip_address" src="https://github.com/user-attachments/assets/fa4b55b4-462e-4dc4-85cd-9e98dfbc9158" />
+
+**Users placing multiple orders within 5 minutes of each other:** To catch potential bot activity or accidental duplicate checkouts, I used `LAG()` partitioned by `user_id` and ordered by `created_at` to pull each user's previous order timestamp alongside their current one. I calculated the gap in seconds rather than minutes to avoid rounding or truncation bugs, then filtered to gaps under 300 seconds (5 minutes). Aggregating by user and counting how many of their orders fall under that threshold surfaces the accounts most likely to show automated or anomalous ordering behaviour.
+
+<img width="427" height="326" alt="rapid_orders" src="https://github.com/user-attachments/assets/3a10d6f7-eeb6-4db9-b373-dd7f034e19d6" />
+
 
 ## Key SQL Techniques Used:
 
@@ -101,6 +112,36 @@ Just as important: I filtered to `status = 'Complete'` *inside* the CTE, before 
 
 For marketing attribution, this is the difference between "this channel drives traffic" and "this channel drives *sales*." Aggregating the cleaned, correctly-matched data by traffic source shows which channels aren't just sending visitors, but actually converting them into completed purchases.
 
+### 3. A Join That Silently Over-Counts
+
+**The problem:** Joining `events` to `orders` on `user_id` alone doesn't specify *which* event corresponds to *which* order, it just returns every combination of matching rows for that user. If a user has, say, 3 cancelled orders and 3 logged events (e.g. from home, work, and phone), the join produces all 3 × 3 = 9 combinations, pairing every IP with every order regardless of whether that IP was actually used for that specific order. The result: each IP gets credited with all 3 cancelled orders, when in reality only one order may have come from each IP. Worse, this inflation isn't a fixed multiplier, it scales with however many events and orders each individual user has, so the distortion is inconsistent across the dataset rather than a simple, predictable bias. For a fraud-detection query specifically, this is a serious problem: an innocent IP could be flagged as high-risk purely because it belongs to a user who happened to generate a lot of event data, not because it was actually involved in the orders being counted.
+
+**The fix:** I used the same nearest-timestamp-match pattern from the traffic source query in the Customer Behaviour section: a `ROW_NUMBER()` window function, partitioned by `order_id` and ordered by the absolute time difference between the order's `created_at` and each candidate event's `created_at`. Keeping only `rank = 1` per order ensures each cancelled/returned order is matched to the single event (and therefore IP address) most likely to be actually associated with it, rather than every IP the user has ever used.
+
+```sql
+WITH ranked_events AS (
+  SELECT
+    o.order_id,
+    e.ip_address,
+    ROW_NUMBER() OVER (
+      PARTITION BY o.order_id
+      ORDER BY ABS(TIMESTAMP_DIFF(o.created_at, e.created_at, SECOND))
+    ) AS rank
+  FROM `bigquery-public-data.thelook_ecommerce.orders` AS o
+  INNER JOIN `bigquery-public-data.thelook_ecommerce.events` AS e
+    ON o.user_id = e.user_id
+  WHERE o.status IN ('Cancelled', 'Returned')
+)
+SELECT
+  ip_address,
+  COUNT(DISTINCT order_id) AS num_cancelled_or_returned_orders
+FROM ranked_events
+WHERE rank = 1
+GROUP BY ip_address
+ORDER BY num_cancelled_or_returned_orders DESC;
+```
+
+Fraud and risk analysis depends on precision. A query that over-attributes cancelled orders to the wrong IPs could send an investigation down the wrong path or wrongly flag an innocent connection. Matching each order to its single closest event keeps the counts accurate and trustworthy before any business decision is made on top of them.
 
 
 
