@@ -6,7 +6,7 @@ This project is a data exploration of **The Look Ecommerce** public dataset on G
 - Customer Behaviour and Retention
 - Risk and Anomalies
 
-**Status: In Progress** — Will add further conclusions for Sales & Business Performance section and Customer Behaviour/Retention. Risk/Anomalies sections in development.
+**Status: Complete**
 ## Dataset
 This project uses **thelook_ecommerce** data available on Google BigQuery.
 
